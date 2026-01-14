@@ -1,81 +1,66 @@
 # DaycraftEngine
 
-DaycraftEngine is an open-source Swift Package that provides a lightweight logic library and a macOS CLI. It is designed as an extensible foundation you can grow over time.
-
 ## Overview
-
-DaycraftEngine ships two products:
-- `DaycraftLogic`: a pure Swift library for core logic.
-- `daycraft`: a CLI built with Swift ArgumentParser.
+DaycraftEngine is the open-source Swift package that powers Daycraft's anti-guilt productivity logic. It provides data models, NLP parsing, core logic, and a macOS CLI. Current version: v0.1.0.
 
 ## Features
-
-- Swift Package Manager support
-- macOS and iOS platform targets
-- CLI entry point with ArgumentParser
-- Clean separation between core logic and CLI
-- Extensible structure for future commands and logic
+- DaycraftModels (TaskItem, Project, Tag, Attachment, Recurrence)
+- DaycraftNLP parsing for time/date/recurrence/priority/tags/projects/reminders/time ranges
+- DaycraftLogic: RealityCheck / StaleDetector / Prioritizer / Insight (protocol-based APIs)
+- CLI commands: parse/create/list/export with JSON output (Markdown optional)
 
 ## Installation
-
-Clone and build locally:
-
-```sh
-git clone git@github.com:imnotnoahhh/daycraft-engine.git
-cd daycraft-engine
-swift build
-```
-
-Or add it to another Swift Package:
-
-```swift
-dependencies: [
-    .package(url: "git@github.com:imnotnoahhh/daycraft-engine.git", from: "0.1.0")
-]
-```
+- Swift Package Manager: add the repository URL in Xcode.
+- Build CLI locally: `swift build` or `swift run daycraft`.
 
 ## CLI Usage
+- `daycraft parse "Read paper #research 45m tomorrow"` -> JSON
+- `daycraft create --title "Read paper" --estimate-minutes 45 --tag research --due 2025-10-12`
+- `daycraft list --status todo --filter "+today #work"`
+- `daycraft export --format json`
 
-Example 1: run the CLI from the package root.
-
-```sh
-swift run daycraft
-```
-
-Example 2: print the CLI version.
-
-```sh
-swift run daycraft --version
-```
+Filter expressions (list/export):
+- `+today`, `+tomorrow`, `+week`
+- `!overdue` / `+overdue`
+- `#tag` / `-#tag`
+- `/done` `/todo` `/inprogress` `/icebox` `/drop`
+- `p1` `p2` `high` `normal` `low` `critical`
+- `@<project-uuid>`
 
 ## API Usage
-
-Example 1: basic usage from Swift.
-
 ```swift
+import DaycraftModels
 import DaycraftLogic
+import DaycraftNLP
 
-let brain = DaycraftBrain()
-print(brain.sayHello())
+let parser = DaycraftNLPParser()
+let parsed = parser.parse("Read paper #research 45m tomorrow")
+
+let task = TaskItem(
+  title: parsed.title,
+  estimatedMinutes: parsed.estimatedMinutes,
+  dueDate: parsed.dueDate,
+  priority: parsed.priority ?? .normal,
+  tags: parsed.tags
+)
+
+let checker: RealityChecking = RealityCheck()
+let result = checker.evaluate(tasks: [task], capacity: DailyCapacity(minutes: 480))
+print(result.isOverloaded)
 ```
 
-Example 2: wrap it in your own helper.
+## API Stability
 
-```swift
-import DaycraftLogic
-
-func makeGreeting() -> String {
-    let brain = DaycraftBrain()
-    return brain.sayHello()
-}
-```
+Public logic APIs are protocol-based for compatibility. See `API.md` for
+the full protocol surface and compatibility policy.
 
 ## Contributing
+Issues and PRs are welcome. Please include tests for new logic.
 
-Issues and pull requests are welcome. Please keep changes focused and add tests when you extend core behavior.
+## Changelog
+See `CHANGELOG.md` for release notes.
 
 ## Roadmap
-
-- Extend core logic with additional, testable behaviors
-- Add more CLI commands on top of the core library
-- Keep the package structure clean as the project grows
+- Phase 1: DaycraftModels + DaycraftNLP + core logic + CLI (v0.1.0)
+- Phase 2: iOS app basics (SwiftUI, SwiftData, iCloud)
+- Phase 3: advanced views, insights, automation, collaboration
