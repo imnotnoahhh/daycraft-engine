@@ -10,6 +10,6 @@ import XCTest
 
 final class DaycraftCLITests: XCTestCase {
     func testCLIConfigurationVersionIsSet() throws {
-        XCTAssertFalse(Daycraft.configuration.version?.isEmpty ?? true)
+        XCTAssertFalse(Daycraft.configuration.version.isEmpty)
     }
 }
